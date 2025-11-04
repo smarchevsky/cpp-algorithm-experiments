@@ -28,7 +28,7 @@ inline constexpr size_t alignToSize(size_t p)
 
 // pre-allocated buffer
 template <int Capacity>
-class DenseTreeBuf {
+class ArenaBuffer {
 
 public:
     size_t size {};

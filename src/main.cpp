@@ -13,7 +13,7 @@
 
 int main()
 {
-    DenseTreeBuf<2048> buf;
+    ArenaBuffer<2048> buf;
 
     using RelativePointerType = uint8_t;
     using Node_t = DenseTreeNode<char, RelativePointerType>;
