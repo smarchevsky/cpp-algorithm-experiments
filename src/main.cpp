@@ -21,6 +21,7 @@ int main()
     fwrite(buf.data, 1, buf.size, f);
     fclose(f);
 #endif
+    printf("Tree size: %zu\n", buf.size);
 }
 
 // uncategorized drafts

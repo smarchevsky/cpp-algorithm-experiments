@@ -64,10 +64,10 @@ struct DenseTreeNode {
     //                      Read:    nodePtr->getData<CustomStringAlignment>();
     // Read and write alignment must be consistent.
 
-    template <typename T, size_t CustomAlignment = 1>
+    template <typename T, size_t DataAlignment = 1>
     T* getData()
     {
-        constexpr size_t maxAlignment = std::max(alignof(T), CustomAlignment);
+        constexpr size_t maxAlignment = std::max(alignof(T), DataAlignment);
         const size_t unaligned = (size_t)this + sizeof(DenseTreeNode);
         return (T*)alignToSize<maxAlignment>(unaligned);
     }
@@ -75,32 +75,34 @@ struct DenseTreeNode {
 
 // Tree from list of variable size string array
 template <typename RelPtrType>
-RelPtrType makeRandomTree(DenseTreeBuf<RelPtrType>& buf, int level, char** strings, int stringNum)
+RelPtrType makeRandomTree(DenseTreeBuf<RelPtrType>& buf,
+    int level, char** strings, int stringNum)
 {
     using Node_t = DenseTreeNode<RelPtrType>;
     if (level == 0)
         return (RelPtrType)-1;
 
-    RelPtrType n = buf.template allocate<Node_t>(1);
+    RelPtrType nodeOffset = buf.template allocate<Node_t>(1);
 
     auto str = strings[rand() % stringNum];
     auto arenaStr = buf.data + buf.template allocate<char, CustomStringAlignment>(strlen(str) + 1);
     strcpy((char*)arenaStr, str);
 
     //  printf("%s \n", arenaStr);
-    Node_t* nodePtr = (Node_t*)(buf.data + n);
+    Node_t* nodePtr = (Node_t*)(buf.data + nodeOffset);
     nodePtr->l = makeRandomTree<RelPtrType>(buf, level - 1, strings, stringNum);
     nodePtr->r = makeRandomTree<RelPtrType>(buf, level - 1, strings, stringNum);
-    return n;
+    return nodeOffset;
 }
 
 // Draw tree structure
 template <typename RelPtrType>
-void printTree(DenseTreeBuf<RelPtrType>& buf, RelPtrType n, int level, size_t childBitfield)
+void printTree(DenseTreeBuf<RelPtrType>& buf,
+    RelPtrType nodeOffset, int level, size_t childBitfield)
 {
     using Node_t = DenseTreeNode<RelPtrType>;
 
-    if (n == (RelPtrType)-1)
+    if (nodeOffset == (RelPtrType)-1)
         return;
 
     for (int i = level - 1; i >= 0; --i) {
@@ -117,7 +119,7 @@ void printTree(DenseTreeBuf<RelPtrType>& buf, RelPtrType n, int level, size_t ch
         }
     }
 
-    Node_t* nodePtr = (Node_t*)(buf.data + n);
+    Node_t* nodePtr = (Node_t*)(buf.data + nodeOffset);
     printf("%s\n", nodePtr->template getData<char, CustomStringAlignment>());
 
     childBitfield <<= 1;
