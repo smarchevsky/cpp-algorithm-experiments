@@ -15,8 +15,9 @@ int main()
 {
     DenseTreeBuf buf;
 
-    using Node_t = DenseTreeNode<char, uint8_t>;
-    auto root = makeRandomTree<Node_t, uint8_t>(buf, 4, (char**)fruits, ARR_SIZE(fruits));
+    using RelativePointerType = uint8_t;
+    using Node_t = DenseTreeNode<char, RelativePointerType>;
+    auto root = makeRandomTree<Node_t, RelativePointerType>(buf, 4, (char**)fruits, ARR_SIZE(fruits));
     printTree<Node_t>(buf, root, 0, 0);
 
 #if 1

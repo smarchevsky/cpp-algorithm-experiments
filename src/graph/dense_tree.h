@@ -65,10 +65,10 @@ RelPtrType makeRandomTree(DenseTreeBuf& buf,
     if (level == 0)
         return (RelPtrType)-1;
 
-    RelPtrType nodeOffset = buf.template allocate<Node_t>(1);
+    RelPtrType nodeOffset = buf.allocate<Node_t>(1);
 
     auto str = strings[rand() % stringNum];
-    auto arenaStr = buf.data + buf.template allocate<char>(strlen(str) + 1);
+    auto arenaStr = buf.data + buf.allocate<char>(strlen(str) + 1);
     strcpy((char*)arenaStr, str);
 
     //  printf("%s \n", arenaStr);
@@ -101,7 +101,7 @@ void printTree(DenseTreeBuf& buf,
     }
 
     Node_t* nodePtr = (Node_t*)(buf.data + nodeOffset);
-    printf("%s\n", nodePtr->template getData());
+    printf("%s\n", nodePtr->getData());
 
     childBitfield <<= 1;
     printTree<Node_t>(buf, nodePtr->l, level + 1, childBitfield);
