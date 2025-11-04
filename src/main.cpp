@@ -13,14 +13,18 @@
 
 int main()
 {
-    DenseTreeBuf<uint8_t> buf;
-    auto root = makeRandomTree(buf, 4, (char**)fruits, ARR_SIZE(fruits));
-    printTree(buf, root, 0, 0);
+    DenseTreeBuf buf;
+
+    using Node_t = DenseTreeNode<char, uint8_t>;
+    auto root = makeRandomTree<Node_t, uint8_t>(buf, 4, (char**)fruits, ARR_SIZE(fruits));
+    printTree<Node_t>(buf, root, 0, 0);
+
 #if 1
     FILE* f = fopen("tree.bin", "wb");
     fwrite(buf.data, 1, buf.size, f);
     fclose(f);
 #endif
+
     printf("Tree size: %zu\n", buf.size);
 }
 

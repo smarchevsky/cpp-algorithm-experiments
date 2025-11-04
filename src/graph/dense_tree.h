@@ -1,13 +1,11 @@
 #ifndef DENSE_TREE_H
 #define DENSE_TREE_H
 
-#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <limits>
 
 /* Dense tree
  *
@@ -29,79 +27,62 @@ inline constexpr size_t alignToSize(size_t p)
 }
 
 // pre-allocated buffer
-template <typename RelPtrType>
 class DenseTreeBuf {
     static constexpr int DefaultBufSize = 256;
-    static_assert(DefaultBufSize - 1 <= std::numeric_limits<RelPtrType>::max());
 
 public:
     size_t size {};
     uint8_t data[DefaultBufSize] {};
 
     // return offset aligned to T, changes size to align TAlign
-    template <typename T, size_t CustomAlignment = 1>
-    RelPtrType allocate(size_t num)
+    template <typename T>
+    size_t allocate(size_t num)
     {
-        constexpr size_t maxAlignment = std::max(alignof(T), CustomAlignment);
-        const size_t alignedPtrStart = alignToSize<maxAlignment>((size_t)data + size);
+        const size_t alignedPtrStart = alignToSize<alignof(T)>((size_t)data + size);
         const size_t alignedOffsetStart = alignedPtrStart - (size_t)data;
         size = alignedOffsetStart + num * sizeof(T);
 
         assert(size < sizeof(data));
-        return (RelPtrType)alignedOffsetStart;
+        return alignedOffsetStart;
     }
 };
 
-constexpr int CustomStringAlignment = 4;
-
 // node with relative pointers (aka uint8_t, uint16_t)
-template <typename RelPtrType>
-struct DenseTreeNode {
+template <typename DataType, typename RelPtrType>
+struct alignas(alignof(DataType)) DenseTreeNode {
     RelPtrType l, r;
 
     // Data is located after node
-    // if you allocate node with:  buf.allocate<char, CustomStringAlignment>(len);
-    //                      Read:    nodePtr->getData<CustomStringAlignment>();
-    // Read and write alignment must be consistent.
-
-    template <typename T, size_t DataAlignment = 1>
-    T* getData()
-    {
-        constexpr size_t maxAlignment = std::max(alignof(T), DataAlignment);
-        const size_t unaligned = (size_t)this + sizeof(DenseTreeNode);
-        return (T*)alignToSize<maxAlignment>(unaligned);
-    }
+    // DenseTreeNode is aligned to DataType, so data after will be correctly read
+    DataType* getData() { return (DataType*)((size_t)this + sizeof(DenseTreeNode)); }
 };
 
 // Tree from list of variable size string array
-template <typename RelPtrType>
-RelPtrType makeRandomTree(DenseTreeBuf<RelPtrType>& buf,
+template <typename Node_t, typename RelPtrType>
+RelPtrType makeRandomTree(DenseTreeBuf& buf,
     int level, char** strings, int stringNum)
 {
-    using Node_t = DenseTreeNode<RelPtrType>;
     if (level == 0)
         return (RelPtrType)-1;
 
     RelPtrType nodeOffset = buf.template allocate<Node_t>(1);
 
     auto str = strings[rand() % stringNum];
-    auto arenaStr = buf.data + buf.template allocate<char, CustomStringAlignment>(strlen(str) + 1);
+    auto arenaStr = buf.data + buf.template allocate<char>(strlen(str) + 1);
     strcpy((char*)arenaStr, str);
 
     //  printf("%s \n", arenaStr);
     Node_t* nodePtr = (Node_t*)(buf.data + nodeOffset);
-    nodePtr->l = makeRandomTree<RelPtrType>(buf, level - 1, strings, stringNum);
-    nodePtr->r = makeRandomTree<RelPtrType>(buf, level - 1, strings, stringNum);
+    nodePtr->l = makeRandomTree<Node_t, RelPtrType>(buf, level - 1, strings, stringNum);
+    nodePtr->r = makeRandomTree<Node_t, RelPtrType>(buf, level - 1, strings, stringNum);
     return nodeOffset;
 }
 
 // Draw tree structure
-template <typename RelPtrType>
-void printTree(DenseTreeBuf<RelPtrType>& buf,
+template <typename Node_t, typename RelPtrType>
+void printTree(DenseTreeBuf& buf,
     RelPtrType nodeOffset, int level, size_t childBitfield)
 {
-    using Node_t = DenseTreeNode<RelPtrType>;
-
     if (nodeOffset == (RelPtrType)-1)
         return;
 
@@ -120,12 +101,12 @@ void printTree(DenseTreeBuf<RelPtrType>& buf,
     }
 
     Node_t* nodePtr = (Node_t*)(buf.data + nodeOffset);
-    printf("%s\n", nodePtr->template getData<char, CustomStringAlignment>());
+    printf("%s\n", nodePtr->template getData());
 
     childBitfield <<= 1;
-    printTree(buf, nodePtr->l, level + 1, childBitfield);
+    printTree<Node_t>(buf, nodePtr->l, level + 1, childBitfield);
     childBitfield |= 1;
-    printTree(buf, nodePtr->r, level + 1, childBitfield);
+    printTree<Node_t>(buf, nodePtr->r, level + 1, childBitfield);
 }
 
 #endif // DENSE_TREE_H
