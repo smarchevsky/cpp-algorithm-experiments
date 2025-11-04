@@ -13,12 +13,12 @@
 
 int main()
 {
-    DenseTreeBuf buf;
+    DenseTreeBuf<2048> buf;
 
     using RelativePointerType = uint8_t;
     using Node_t = DenseTreeNode<char, RelativePointerType>;
-    auto root = makeRandomTree<Node_t, RelativePointerType>(buf, 4, (char**)fruits, ARR_SIZE(fruits));
-    printTree<Node_t>(buf, root, 0, 0);
+    auto root = makeRandomTree<typeof(buf), Node_t, RelativePointerType>(buf, 4, (char**)fruits, ARR_SIZE(fruits));
+    printTree<typeof(buf), Node_t>(buf, root, 0, 0);
 
 #if 1
     FILE* f = fopen("tree.bin", "wb");
