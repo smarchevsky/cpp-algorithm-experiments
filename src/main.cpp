@@ -15,7 +15,7 @@ int main()
 {
     DenseTreeBuf<uint8_t> buf;
     auto root = makeRandomTree(buf, 4, (char**)fruits, ARR_SIZE(fruits));
-    printTree(buf, root, 0);
+    printTree(buf, root, 0, 0);
 #if 1
     FILE* f = fopen("tree.bin", "wb");
     fwrite(buf.data, 1, buf.size, f);

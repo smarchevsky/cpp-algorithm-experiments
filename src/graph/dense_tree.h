@@ -96,22 +96,34 @@ RelPtrType makeRandomTree(DenseTreeBuf<RelPtrType>& buf, int level, char** strin
 
 // Draw tree structure
 template <typename RelPtrType>
-void printTree(DenseTreeBuf<RelPtrType>& buf, RelPtrType n, int level)
+void printTree(DenseTreeBuf<RelPtrType>& buf, RelPtrType n, int level, size_t childBitfield)
 {
     using Node_t = DenseTreeNode<RelPtrType>;
 
     if (n == (RelPtrType)-1)
         return;
 
-    for (int i = 0; i < level; ++i) {
-        printf("  ");
+    for (int i = level - 1; i >= 0; --i) {
+        if (childBitfield >> i & 0b1) {
+            if (childBitfield & 1 && i == 0)
+                printf("└─ ");
+            else
+                printf("   ");
+        } else {
+            if (i == 0)
+                printf("├─ ");
+            else
+                printf("|  ");
+        }
     }
 
     Node_t* nodePtr = (Node_t*)(buf.data + n);
     printf("%s\n", nodePtr->template getData<char, CustomStringAlignment>());
 
-    printTree(buf, nodePtr->l, level + 1);
-    printTree(buf, nodePtr->r, level + 1);
+    childBitfield <<= 1;
+    printTree(buf, nodePtr->l, level + 1, childBitfield);
+    childBitfield |= 1;
+    printTree(buf, nodePtr->r, level + 1, childBitfield);
 }
 
 #endif // DENSE_TREE_H
