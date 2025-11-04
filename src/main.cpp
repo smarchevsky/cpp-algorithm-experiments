@@ -1,7 +1,7 @@
 /*
  * by Stanilav Marchevsky
  *
- * Here I create random small things with C, C++ or mixed.
+ * Here I create different algorithms with C/C++.
  * For practice and curiocity.
  *
  */
